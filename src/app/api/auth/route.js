@@ -20,8 +20,8 @@ export async function POST(request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      expires: session.expires,
       path: '/',
+      maxAge: 86400,
     })
 
     return response

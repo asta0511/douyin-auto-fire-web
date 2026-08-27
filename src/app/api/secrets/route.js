@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { getSecretStatus, updateSecret } from '@/lib/github'
 
-export async function GET() {
+export async function GET(request) {
   try {
-    requireAuth()
+    requireAuth(request)
     const status = await getSecretStatus()
     return NextResponse.json({ secrets: status })
   } catch (error) {
@@ -17,7 +17,7 @@ export async function GET() {
 
 export async function PUT(request) {
   try {
-    requireAuth()
+    requireAuth(request)
     const { name, value } = await request.json()
 
     if (!name || !value) {

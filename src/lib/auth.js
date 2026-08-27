@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers'
 import { randomBytes } from 'crypto'
 
 const SESSION_COOKIE = 'session_token'
@@ -20,15 +19,10 @@ export function createSession() {
   return { token, expires }
 }
 
-export function getSession() {
-  const cookieStore = cookies()
-  return cookieStore.get(SESSION_COOKIE)?.value
-}
-
-export function requireAuth() {
-  const session = getSession()
-  if (!session) {
+export function requireAuth(request) {
+  const sessionToken = request.cookies.get(SESSION_COOKIE)?.value
+  if (!sessionToken) {
     throw new Error('Unauthorized')
   }
-  return session
+  return sessionToken
 }

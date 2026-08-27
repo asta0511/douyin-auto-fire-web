@@ -164,6 +164,16 @@ export default function ConfigEditor({ onSuccess, onError }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+
+    if (!Array.isArray(config.friends) || config.friends.length === 0) {
+      onError('好友列表不能为空，请先导入配置或添加好友')
+      return
+    }
+    if (!Array.isArray(config.messages) || config.messages.length === 0) {
+      onError('消息列表不能为空')
+      return
+    }
+
     setLoading(true)
 
     const payload = {

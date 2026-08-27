@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 const DEFAULT_CONFIG = {
   task_id: 'daily-streak',
@@ -15,12 +15,35 @@ const DEFAULT_CONFIG = {
   target_open_timeout_seconds: 15,
 }
 
+function parseConfig(raw) {
+  const c = typeof raw === 'string' ? JSON.parse(raw) : raw
+  return {
+    task_id: c.task_id || DEFAULT_CONFIG.task_id,
+    timezone: c.timezone || DEFAULT_CONFIG.timezone,
+    friends: Array.isArray(c.friends) ? c.friends : [],
+    messages: Array.isArray(c.messages) ? c.messages : DEFAULT_CONFIG.messages,
+    stickers: c.stickers && typeof c.stickers === 'object' ? c.stickers : DEFAULT_CONFIG.stickers,
+    send_interval_seconds: {
+      min: c.send_interval_seconds?.min ?? DEFAULT_CONFIG.send_interval_seconds.min,
+      max: c.send_interval_seconds?.max ?? DEFAULT_CONFIG.send_interval_seconds.max,
+    },
+    continue_on_error: c.continue_on_error ?? DEFAULT_CONFIG.continue_on_error,
+    prevent_duplicates: c.prevent_duplicates ?? DEFAULT_CONFIG.prevent_duplicates,
+    target_open_retries: c.target_open_retries ?? DEFAULT_CONFIG.target_open_retries,
+    target_open_timeout_seconds: c.target_open_timeout_seconds ?? DEFAULT_CONFIG.target_open_timeout_seconds,
+  }
+}
+
 export default function ConfigEditor({ onSuccess, onError }) {
   const [config, setConfig] = useState(DEFAULT_CONFIG)
   const [friendInput, setFriendInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showStickersEditor, setShowStickersEditor] = useState(false)
   const [stickersText, setStickersText] = useState(JSON.stringify(DEFAULT_CONFIG.stickers, null, 2))
+  const [importMode, setImportMode] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef(null)
 
   function updateField(path, value) {
     setConfig((prev) => {
@@ -33,6 +56,57 @@ export default function ConfigEditor({ onSuccess, onError }) {
       obj[keys[keys.length - 1]] = value
       return next
     })
+  }
+
+  function applyImportedConfig(parsed) {
+    setConfig(parsed)
+    setStickersText(JSON.stringify(parsed.stickers, null, 2))
+    setImportMode(false)
+    setImportText('')
+    setDragOver(false)
+  }
+
+  function handleImportPaste() {
+    if (!importText.trim()) return
+    try {
+      const parsed = parseConfig(importText)
+      applyImportedConfig(parsed)
+    } catch {
+      onError('JSON 格式错误，请检查')
+    }
+  }
+
+  function handleFileUpload(file) {
+    if (!file || file.type !== 'application/json') {
+      onError('请上传 JSON 文件')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const parsed = parseConfig(e.target.result)
+        applyImportedConfig(parsed)
+      } catch {
+        onError('JSON 文件格式错误')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  function handleFileDrop(e) {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileUpload(file)
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault()
+    setDragOver(true)
+  }
+
+  function handleDragLeave() {
+    setDragOver(false)
   }
 
   function addFriend() {
@@ -131,10 +205,80 @@ export default function ConfigEditor({ onSuccess, onError }) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-1">更新 DOUYIN_CONFIG</h2>
-      <p className="text-sm text-gray-500 mb-6">
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-lg font-semibold text-gray-900">更新 DOUYIN_CONFIG</h2>
+        <button
+          type="button"
+          onClick={() => setImportMode(!importMode)}
+          className="text-sm px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
+        >
+          {importMode ? '取消导入' : '导入配置'}
+        </button>
+      </div>
+      <p className="text-sm text-gray-500 mb-4">
         通过表单编辑配置，保存后会自动同步到 GitHub Secrets。
       </p>
+
+      {/* Import Section */}
+      {importMode && (
+        <div className="mb-6 p-4 border-2 border-dashed border-orange-200 rounded-xl bg-orange-50/50">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">导入配置</h3>
+
+          {/* Upload Area */}
+          <div
+            onDrop={handleFileDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+            className={`cursor-pointer border-2 border-dashed rounded-lg p-6 text-center transition mb-3 ${
+              dragOver
+                ? 'border-orange-400 bg-orange-100'
+                : 'border-gray-300 hover:border-orange-300 bg-white'
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files[0]
+                if (file) handleFileUpload(file)
+                e.target.value = ''
+              }}
+            />
+            <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <p className="text-sm text-gray-500">
+              {dragOver ? '松开以上传文件' : '点击选择 JSON 文件，或拖拽文件到此处'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span>或者粘贴 JSON</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          {/* Paste Area */}
+          <textarea
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            rows={5}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-mono mb-3"
+            placeholder='粘贴 config.json 内容...&#10;{&#10;  "task_id": "daily-streak",&#10;  "friends": [...],&#10;  ...&#10;}'
+          />
+          <button
+            type="button"
+            onClick={handleImportPaste}
+            disabled={!importText.trim()}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50 transition"
+          >
+            解析并导入
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}

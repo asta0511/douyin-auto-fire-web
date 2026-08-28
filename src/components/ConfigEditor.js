@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 const DEFAULT_CONFIG = {
   task_id: 'daily-streak',
@@ -59,17 +59,6 @@ function saveToHistory(config) {
   if (history.length > MAX_HISTORY) history.pop()
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
   return entry
-}
-
-function configSummary(config) {
-  const parts = []
-  if (config.friends?.length) parts.push(`${config.friends.length} 个好友`)
-  if (config.messages?.length) {
-    const types = config.messages.map((m) => m.type).join(', ')
-    parts.push(`${config.messages.length} 条消息 (${types})`)
-  }
-  if (config.task_id) parts.push(`任务: ${config.task_id}`)
-  return parts.join(' | ')
 }
 
 export default function ConfigEditor({ onSuccess, onError }) {
@@ -285,40 +274,47 @@ export default function ConfigEditor({ onSuccess, onError }) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
+    <div className="glass-card glass-lens p-6">
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-lg font-semibold text-gray-900">更新 DOUYIN_CONFIG</h2>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-violet-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">更新 DOUYIN_CONFIG</h2>
+        </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => { setShowHistory(!showHistory); setSelectedHistory(null) }}
-            className="text-sm px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition flex items-center gap-1.5"
+            className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             历史记录
             {history.length > 0 && (
-              <span className="bg-gray-200 text-gray-600 text-xs rounded-full px-1.5 py-0.5">{history.length}</span>
+              <span className="bg-white/40 text-gray-500 text-xs rounded-full px-1.5 py-0.5">{history.length}</span>
             )}
           </button>
           <button
             type="button"
             onClick={() => setImportMode(!importMode)}
-            className="text-sm px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
+            className="btn-secondary text-xs px-3 py-1.5"
           >
             {importMode ? '取消导入' : '导入配置'}
           </button>
         </div>
       </div>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-gray-500 mb-4 ml-11">
         通过表单编辑配置，保存后会自动同步到 GitHub Secrets。导入或保存时会自动记录历史版本。
       </p>
 
       {/* History Panel */}
       {showHistory && (
-        <div className="mb-6 border border-gray-200 rounded-xl bg-gray-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <div className="mb-6 glass glass-lens rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/20">
             <h3 className="text-sm font-medium text-gray-700">配置历史记录</h3>
             <div className="flex items-center gap-2">
               {history.length > 0 && (
@@ -355,27 +351,27 @@ export default function ConfigEditor({ onSuccess, onError }) {
                   <button
                     type="button"
                     onClick={() => restoreFromHistory(selectedHistory)}
-                    className="text-xs px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                    className="btn-primary text-xs px-3 py-1.5"
                   >
                     恢复此版本
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedHistory(null)}
-                    className="text-xs px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition"
+                    className="btn-secondary text-xs px-3 py-1.5"
                   >
                     返回列表
                   </button>
                 </div>
               </div>
-              <pre className="text-xs font-mono bg-white rounded-lg border p-3 overflow-auto max-h-64 text-gray-700">
+              <pre className="text-xs font-mono bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 p-3 overflow-auto max-h-64 text-gray-700">
                 {JSON.stringify(selectedHistory.config, null, 2)}
               </pre>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200 max-h-72 overflow-y-auto">
+            <div className="divide-y divide-white/10 max-h-72 overflow-y-auto">
               {history.map((entry) => (
-                <div key={entry.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition group">
+                <div key={entry.id} className="px-4 py-3 flex items-center justify-between hover:bg-white/10 transition group">
                   <button
                     type="button"
                     onClick={() => setSelectedHistory(entry)}
@@ -390,7 +386,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                     <button
                       type="button"
                       onClick={() => restoreFromHistory(entry)}
-                      className="text-xs px-2 py-1 text-orange-600 hover:bg-orange-50 rounded transition"
+                      className="text-xs px-2 py-1 text-orange-600 hover:bg-orange-50/50 rounded transition"
                       title="恢复此版本"
                     >
                       恢复
@@ -398,7 +394,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                     <button
                       type="button"
                       onClick={() => deleteHistoryEntry(entry.id)}
-                      className="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded transition"
+                      className="text-xs px-2 py-1 text-red-500 hover:bg-red-50/50 rounded transition"
                       title="删除此记录"
                     >
                       删除
@@ -413,10 +409,9 @@ export default function ConfigEditor({ onSuccess, onError }) {
 
       {/* Import Section */}
       {importMode && (
-        <div className="mb-6 p-4 border-2 border-dashed border-orange-200 rounded-xl bg-orange-50/50">
+        <div className="mb-6 p-4 border-2 border-dashed border-white/40 rounded-xl bg-white/10 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-gray-700 mb-3">导入配置</h3>
 
-          {/* Upload Area */}
           <div
             onDrop={handleFileDrop}
             onDragOver={handleDragOver}
@@ -424,8 +419,8 @@ export default function ConfigEditor({ onSuccess, onError }) {
             onClick={() => fileInputRef.current?.click()}
             className={`cursor-pointer border-2 border-dashed rounded-lg p-6 text-center transition mb-3 ${
               dragOver
-                ? 'border-orange-400 bg-orange-100'
-                : 'border-gray-300 hover:border-orange-300 bg-white'
+                ? 'border-orange-400 bg-orange-100/30'
+                : 'border-white/30 hover:border-orange-300/50 bg-white/20'
             }`}
           >
             <input
@@ -448,24 +443,23 @@ export default function ConfigEditor({ onSuccess, onError }) {
           </div>
 
           <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-white/30" />
             <span>或者粘贴 JSON</span>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-white/30" />
           </div>
 
-          {/* Paste Area */}
           <textarea
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
             rows={5}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-mono mb-3"
+            className="glass-input w-full px-3 py-2 text-sm font-mono mb-3"
             placeholder='粘贴 config.json 内容...&#10;{&#10;  "task_id": "daily-streak",&#10;  "friends": [...],&#10;  ...&#10;}'
           />
           <button
             type="button"
             onClick={handleImportPaste}
             disabled={!importText.trim()}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50 transition"
+            className="btn-primary px-4 py-2 text-sm"
           >
             解析并导入
           </button>
@@ -476,36 +470,33 @@ export default function ConfigEditor({ onSuccess, onError }) {
         {/* Basic Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">任务 ID</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">任务 ID</label>
             <input
               type="text"
               value={config.task_id}
               onChange={(e) => updateField('task_id', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+              className="glass-input w-full px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">时区</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">时区</label>
             <input
               type="text"
               value={config.timezone}
               onChange={(e) => updateField('timezone', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+              className="glass-input w-full px-3 py-2 text-sm"
             />
           </div>
         </div>
 
         {/* Friends */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             好友列表（{config.friends.length} 人）
           </label>
           <div className="flex flex-wrap gap-2 mb-2">
             {config.friends.map((name) => (
-              <span
-                key={name}
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 text-orange-700 rounded-full text-sm border border-orange-200"
-              >
+              <span key={name} className="tag">
                 {name}
                 <button
                   type="button"
@@ -525,14 +516,14 @@ export default function ConfigEditor({ onSuccess, onError }) {
               value={friendInput}
               onChange={(e) => setFriendInput(e.target.value)}
               onKeyDown={handleFriendKeyDown}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+              className="glass-input flex-1 px-3 py-2 text-sm"
               placeholder="输入好友昵称，按 Enter 添加"
             />
             <button
               type="button"
               onClick={addFriend}
               disabled={!friendInput.trim()}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 text-sm transition"
+              className="btn-secondary text-sm px-4 py-2"
             >
               添加
             </button>
@@ -546,7 +537,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
             <button
               type="button"
               onClick={addMessage}
-              className="text-sm text-orange-500 hover:text-orange-600 transition"
+              className="text-sm text-orange-600 hover:text-orange-700 transition font-medium"
             >
               + 添加消息
             </button>
@@ -557,7 +548,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 <select
                   value={msg.type}
                   onChange={(e) => updateMessage(i, 'type', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white"
+                  className="glass-input px-3 py-2 text-sm bg-white/40"
                 >
                   <option value="sticker">贴纸 (sticker)</option>
                   <option value="text">文字 (text)</option>
@@ -567,11 +558,11 @@ export default function ConfigEditor({ onSuccess, onError }) {
                   type="text"
                   value={msg.value}
                   onChange={(e) => updateMessage(i, 'value', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                  className="glass-input flex-1 px-3 py-2 text-sm"
                   placeholder={msg.type === 'sticker' ? '贴纸名称' : msg.type === 'text' ? '消息内容' : '图片路径'}
                 />
                 {msg.type === 'sticker' && (
-                  <span className="text-xs text-gray-400">需在 stickers 中定义</span>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">需在 stickers 中定义</span>
                 )}
                 <button
                   type="button"
@@ -597,7 +588,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 setStickersText(JSON.stringify(config.stickers, null, 2))
                 setShowStickersEditor(!showStickersEditor)
               }}
-              className="text-sm text-orange-500 hover:text-orange-600 transition"
+              className="text-sm text-orange-600 hover:text-orange-700 transition font-medium"
             >
               {showStickersEditor ? '收起' : 'JSON 编辑'}
             </button>
@@ -608,18 +599,18 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 value={stickersText}
                 onChange={(e) => setStickersText(e.target.value)}
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-mono"
+                className="glass-input w-full px-3 py-2 text-sm font-mono"
               />
               <button
                 type="button"
                 onClick={applyStickers}
-                className="text-sm px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
+                className="btn-secondary text-sm px-3 py-1.5"
               >
                 应用
               </button>
             </div>
           ) : (
-            <div className="text-sm text-gray-400 bg-gray-50 rounded-lg p-3 border">
+            <div className="text-sm text-gray-400 bg-white/20 backdrop-blur-sm rounded-lg p-3 border border-white/20">
               {Object.keys(config.stickers).length > 0
                 ? `已定义 ${Object.keys(config.stickers).length} 个贴纸`
                 : '未定义贴纸'}
@@ -638,7 +629,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 min={1}
                 value={config.send_interval_seconds.min}
                 onChange={(e) => updateField('send_interval_seconds.min', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                className="glass-input w-full px-3 py-2 text-sm"
               />
             </div>
             <div>
@@ -648,36 +639,36 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 min={1}
                 value={config.send_interval_seconds.max}
                 onChange={(e) => updateField('send_interval_seconds.max', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                className="glass-input w-full px-3 py-2 text-sm"
               />
             </div>
           </div>
         </div>
 
         {/* Toggles */}
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer">
+        <div className="space-y-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+          <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={config.continue_on_error}
               onChange={(e) => updateField('continue_on_error', e.target.checked)}
-              className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500 accent-orange-500"
             />
             <div>
-              <span className="text-sm font-medium text-gray-700">出错继续</span>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition">出错继续</span>
               <p className="text-xs text-gray-400">发送失败时继续执行，不中断</p>
             </div>
           </label>
 
-          <label className="flex items-center gap-3 cursor-pointer">
+          <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={config.prevent_duplicates}
               onChange={(e) => updateField('prevent_duplicates', e.target.checked)}
-              className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500 accent-orange-500"
             />
             <div>
-              <span className="text-sm font-medium text-gray-700">防重复发送</span>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition">防重复发送</span>
               <p className="text-xs text-gray-400">记录发送历史，避免重复发送</p>
             </div>
           </label>
@@ -694,7 +685,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 min={0}
                 value={config.target_open_retries}
                 onChange={(e) => updateField('target_open_retries', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                className="glass-input w-full px-3 py-2 text-sm"
               />
             </div>
             <div>
@@ -704,7 +695,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 min={1}
                 value={config.target_open_timeout_seconds}
                 onChange={(e) => updateField('target_open_timeout_seconds', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                className="glass-input w-full px-3 py-2 text-sm"
               />
             </div>
           </div>
@@ -715,9 +706,17 @@ export default function ConfigEditor({ onSuccess, onError }) {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
+            className="btn-primary px-6 py-2.5 text-sm"
           >
-            {loading ? '保存中...' : '保存 Config 到 GitHub Secrets'}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                保存中...
+              </span>
+            ) : '保存 Config 到 GitHub Secrets'}
           </button>
         </div>
       </form>

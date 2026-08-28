@@ -36,34 +36,41 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8 mx-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      {/* Decorative blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-orange-300/30 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-300/25 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-amber-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '12s' }} />
+      </div>
+
+      <div className="w-full max-w-md animate-enter" style={{ animationDelay: '0.1s' }}>
+        <div className="glass-card glass-lens p-10 mx-4">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl mb-4 shadow-lg shadow-orange-500/25">
               <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">抖音续火花</h1>
-            <p className="text-gray-500 mt-1">配置管理面板</p>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">抖音续火花</h1>
+            <p className="text-gray-500 mt-1.5 text-sm">配置管理面板</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">登录密码</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">登录密码</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                className="glass-input w-full px-4 py-3 text-sm"
                 placeholder="请输入密码"
                 autoFocus
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm px-4 py-2.5 rounded-lg border border-red-200">
+              <div className="bg-red-50/80 backdrop-blur-sm text-red-600 text-sm px-4 py-2.5 rounded-xl border border-red-200/50 animate-enter">
                 {error}
               </div>
             )}
@@ -71,9 +78,17 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !password}
-              className="w-full py-2.5 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="btn-primary w-full py-3 text-sm"
             >
-              {loading ? '登录中...' : '登录'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  登录中...
+                </span>
+              ) : '登录'}
             </button>
           </form>
         </div>

@@ -7,6 +7,29 @@ import CookieEditor from '@/components/CookieEditor'
 import ConfigEditor from '@/components/ConfigEditor'
 import LiquidBackground from '@/components/LiquidBackground'
 
+function createRipple(e) {
+  const btn = e.currentTarget
+  const rect = btn.getBoundingClientRect()
+  const size = Math.max(rect.width, rect.height)
+  const x = e.clientX - rect.left - size / 2
+  const y = e.clientY - rect.top - size / 2
+
+  const ripple = document.createElement('span')
+  ripple.className = 'btn-ripple'
+  ripple.style.width = ripple.style.height = `${size}px`
+  ripple.style.left = `${x}px`
+  ripple.style.top = `${y}px`
+
+  btn.appendChild(ripple)
+  ripple.addEventListener('animationend', () => ripple.remove())
+}
+
+const TABS = [
+  { id: 'overview', label: '概览', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+  { id: 'cookie', label: 'Cookie 管理', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+  { id: 'config', label: 'Config 配置', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+]
+
 export default function DashboardPage() {
   const [secrets, setSecrets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -60,7 +83,18 @@ export default function DashboardPage() {
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm toast-enter ${
           toast.type === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-red-500 to-rose-600'
         }`}>
-          {toast.message}
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" /><path d="M15 9l-6 6M9 9l6 6" strokeLinecap="round" />
+              </svg>
+            )}
+            {toast.message}
+          </div>
         </div>
       )}
 
@@ -88,22 +122,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="max-w-5xl mx-auto mt-6 animate-enter animate-stagger-1">
+      <div className="max-w-5xl mx-auto mt-6 animate-enter" style={{ animationDelay: '0.05s' }}>
         <div className="glass glass-lens rounded-2xl p-1.5">
           <div className="flex gap-1">
-            {[
-              { id: 'overview', label: '概览', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-              { id: 'cookie', label: 'Cookie 管理', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-              { id: 'config', label: 'Config 配置', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-            ].map((tab) => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'tab-active shadow-lg'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/20'
-                }`}
+                className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
@@ -122,21 +148,23 @@ export default function DashboardPage() {
               {loading ? (
                 <div className="grid gap-4">
                   {[1, 2].map((i) => (
-                    <div key={i} className="glass-card p-6 animate-pulse" style={{ border: 'none' }}>
-                      <div className="h-5 bg-white/30 rounded-lg w-1/3 mb-3"></div>
-                      <div className="h-4 bg-white/20 rounded-lg w-2/3"></div>
-                    </div>
+                    <div key={i} className="p-6 skeleton" style={{ height: '100px' }} />
                   ))}
                 </div>
               ) : error ? (
-                <div className="glass glass-lens rounded-2xl p-5 text-red-600 text-sm">
-                  {error}
-                  <button onClick={fetchSecrets} className="ml-2 underline font-medium">重试</button>
+                <div className="glass glass-lens rounded-2xl p-5">
+                  <div className="flex items-center gap-2 text-red-600 text-sm">
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" strokeLinecap="round" />
+                    </svg>
+                    {error}
+                    <button onClick={fetchSecrets} className="ml-2 underline font-medium hover:text-red-800">重试</button>
+                  </div>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {secrets.map((s, i) => (
-                    <div key={s.name} className={`animate-enter animate-stagger-${i + 1}`}>
+                    <div key={s.name} className="animate-enter" style={{ '--i': i, animationDelay: 'calc(var(--i) * 80ms)' }}>
                       <SecretCard secret={s} />
                     </div>
                   ))}
@@ -146,7 +174,7 @@ export default function DashboardPage() {
           )}
 
           {activeTab === 'cookie' && (
-            <div className="animate-enter animate-stagger-1" key="cookie">
+            <div className="animate-enter" key="cookie" style={{ animationDelay: '0.05s' }}>
               <CookieEditor
                 onSuccess={() => { fetchSecrets(); showToast('Cookie 更新成功！') }}
                 onError={(msg) => showToast(msg, 'error')}
@@ -155,7 +183,7 @@ export default function DashboardPage() {
           )}
 
           {activeTab === 'config' && (
-            <div className="animate-enter animate-stagger-1" key="config">
+            <div className="animate-enter" key="config" style={{ animationDelay: '0.05s' }}>
               <ConfigEditor
                 onSuccess={(msg) => { fetchSecrets(); showToast(msg || 'Config 更新成功！') }}
                 onError={(msg) => showToast(msg, 'error')}

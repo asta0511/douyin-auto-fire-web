@@ -2,6 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react'
 
+function createRipple(e) {
+  const btn = e.currentTarget
+  const rect = btn.getBoundingClientRect()
+  const size = Math.max(rect.width, rect.height)
+  const x = e.clientX - rect.left - size / 2
+  const y = e.clientY - rect.top - size / 2
+  const ripple = document.createElement('span')
+  ripple.className = 'btn-ripple'
+  ripple.style.width = ripple.style.height = `${size}px`
+  ripple.style.left = `${x}px`
+  ripple.style.top = `${y}px`
+  btn.appendChild(ripple)
+  ripple.addEventListener('animationend', () => ripple.remove())
+}
+
 const DEFAULT_CONFIG = {
   task_id: 'daily-streak',
   timezone: 'Asia/Shanghai',
@@ -289,6 +304,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
             type="button"
             onClick={() => { setShowHistory(!showHistory); setSelectedHistory(null) }}
             className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
+            onMouseDown={createRipple}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -302,6 +318,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
             type="button"
             onClick={() => setImportMode(!importMode)}
             className="btn-secondary text-xs px-3 py-1.5"
+            onMouseDown={createRipple}
           >
             {importMode ? '取消导入' : '导入配置'}
           </button>
@@ -322,6 +339,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                   type="button"
                   onClick={clearAllHistory}
                   className="text-xs text-red-500 hover:text-red-700 transition"
+                  onMouseDown={createRipple}
                 >
                   清空全部
                 </button>
@@ -352,6 +370,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                     type="button"
                     onClick={() => restoreFromHistory(selectedHistory)}
                     className="btn-primary text-xs px-3 py-1.5"
+                    onMouseDown={createRipple}
                   >
                     恢复此版本
                   </button>
@@ -359,6 +378,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                     type="button"
                     onClick={() => setSelectedHistory(null)}
                     className="btn-secondary text-xs px-3 py-1.5"
+                    onMouseDown={createRipple}
                   >
                     返回列表
                   </button>
@@ -388,6 +408,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                       onClick={() => restoreFromHistory(entry)}
                       className="text-xs px-2 py-1 text-orange-600 hover:bg-orange-50/50 rounded transition"
                       title="恢复此版本"
+                      onMouseDown={createRipple}
                     >
                       恢复
                     </button>
@@ -396,6 +417,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
                       onClick={() => deleteHistoryEntry(entry.id)}
                       className="text-xs px-2 py-1 text-red-500 hover:bg-red-50/50 rounded transition"
                       title="删除此记录"
+                      onMouseDown={createRipple}
                     >
                       删除
                     </button>
@@ -460,6 +482,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
             onClick={handleImportPaste}
             disabled={!importText.trim()}
             className="btn-primary px-4 py-2 text-sm"
+            onMouseDown={createRipple}
           >
             解析并导入
           </button>
@@ -524,6 +547,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
               onClick={addFriend}
               disabled={!friendInput.trim()}
               className="btn-secondary text-sm px-4 py-2"
+              onMouseDown={createRipple}
             >
               添加
             </button>
@@ -602,10 +626,11 @@ export default function ConfigEditor({ onSuccess, onError }) {
                 className="glass-input w-full px-3 py-2 text-sm font-mono"
               />
               <button
-                type="button"
-                onClick={applyStickers}
-                className="btn-secondary text-sm px-3 py-1.5"
-              >
+              type="button"
+              onClick={applyStickers}
+              className="btn-secondary text-sm px-3 py-1.5"
+              onMouseDown={createRipple}
+            >
                 应用
               </button>
             </div>
@@ -707,6 +732,7 @@ export default function ConfigEditor({ onSuccess, onError }) {
             type="submit"
             disabled={loading}
             className="btn-primary px-6 py-2.5 text-sm"
+            onMouseDown={createRipple}
           >
             {loading ? (
               <span className="flex items-center gap-2">

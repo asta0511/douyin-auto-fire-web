@@ -1,8 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import LiquidBackground from '@/components/LiquidBackground'
+
+function createRipple(e) {
+  const btn = e.currentTarget
+  const rect = btn.getBoundingClientRect()
+  const size = Math.max(rect.width, rect.height)
+  const x = e.clientX - rect.left - size / 2
+  const y = e.clientY - rect.top - size / 2
+
+  const ripple = document.createElement('span')
+  ripple.className = 'btn-ripple'
+  ripple.style.width = ripple.style.height = `${size}px`
+  ripple.style.left = `${x}px`
+  ripple.style.top = `${y}px`
+
+  btn.appendChild(ripple)
+  ripple.addEventListener('animationend', () => ripple.remove())
+}
 
 export default function LoginPage() {
   const [password, setPassword] = useState('')
@@ -10,7 +27,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  async function handleSubmit(e) {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -34,7 +51,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [password, router])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -43,7 +60,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md animate-enter" style={{ animationDelay: '0.1s' }}>
         <div className="glass-card glass-lens p-10 mx-4">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl mb-4 shadow-lg shadow-orange-500/25">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl mb-4 shadow-lg shadow-orange-500/25"
+                 style={{ transition: 'transform 0.3s var(--ease-out)' }}>
               <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -75,6 +93,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading || !password}
               className="btn-primary w-full py-3 text-sm"
+              onClick={createRipple}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

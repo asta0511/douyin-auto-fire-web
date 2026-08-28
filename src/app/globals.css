@@ -22,6 +22,8 @@
 
   /* Apple design tokens */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --duration-fast: 150ms;
@@ -71,7 +73,10 @@ body {
   border: var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--glass-radius);
-  transition: all var(--duration-normal) var(--ease-out);
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out),
+              background var(--duration-normal) var(--ease-out);
+  will-change: transform;
 }
 
 .glass-card:hover {
@@ -86,7 +91,9 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 12px;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .glass-input:focus {
@@ -181,6 +188,16 @@ body {
   100% { background-position: 200% 0; }
 }
 
+@keyframes checkmark {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
 .animate-enter {
   animation: fadeInUp var(--duration-enter) var(--ease-out) both;
 }
@@ -193,11 +210,10 @@ body {
   animation: slideInRight var(--duration-slow) var(--ease-out) both;
 }
 
-.animate-stagger-1 { animation-delay: 0.05s; }
-.animate-stagger-2 { animation-delay: 0.1s; }
-.animate-stagger-3 { animation-delay: 0.15s; }
-.animate-stagger-4 { animation-delay: 0.2s; }
-.animate-stagger-5 { animation-delay: 0.25s; }
+/* Stagger using CSS custom properties - more flexible */
+.animate-stagger {
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
 
 /* ========== Button Styles ========== */
 .btn-primary {
@@ -208,9 +224,11 @@ body {
   color: white;
   font-weight: 500;
   padding: 0.625rem 1.5rem;
-  transition: all var(--duration-fast) var(--ease-out);
   cursor: pointer;
   overflow: hidden;
+  transition: transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+  will-change: transform;
 }
 
 .btn-primary::before {
@@ -233,7 +251,8 @@ body {
 }
 
 .btn-primary:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+  box-shadow: 0 2px 10px rgba(249, 115, 22, 0.25);
 }
 
 .btn-primary:disabled {
@@ -241,6 +260,23 @@ body {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Button ripple effect - pure CSS */
+.btn-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(0);
+  animation: rippleAnim 600ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleAnim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
 
 .btn-secondary {
@@ -253,8 +289,10 @@ body {
   color: #374151;
   font-weight: 500;
   padding: 0.625rem 1.25rem;
-  transition: all var(--duration-fast) var(--ease-out);
   cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+  will-change: transform;
 }
 
 .btn-secondary:hover {
@@ -263,14 +301,37 @@ body {
 }
 
 .btn-secondary:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 /* ========== Tab Styles ========== */
-.tab-active {
-  background: linear-gradient(135deg, #f97316, #ef4444) !important;
-  color: white !important;
-  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.3) !important;
+.tab-btn {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--duration-normal) var(--ease-out);
+  color: #6b7280;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.tab-btn:hover {
+  color: #374151;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  color: white;
+  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.3);
 }
 
 /* ========== Tag / Chip ========== */
@@ -297,6 +358,17 @@ body {
 /* ========== Toast ========== */
 .toast-enter {
   animation: slideInRight var(--duration-normal) var(--ease-out);
+}
+
+.toast-exit {
+  animation: slideInRight 200ms var(--ease-in) reverse;
+}
+
+/* ========== Skeleton ========== */
+.skeleton {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  animation: skeletonPulse 2s ease-in-out infinite;
 }
 
 /* ========== Scrollbar ========== */
@@ -448,5 +520,34 @@ body {
   66% {
     transform: translate(60px, 30px) scale(0.93) rotate(-240deg);
     border-radius: 55% 45% 45% 55% / 45% 55% 55% 45%;
+  }
+}
+
+/* ========== Reduced Motion ========== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::after,
+  *::before {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .liquid-blob {
+    animation: none !important;
+  }
+
+  .toast-enter,
+  .toast-exit {
+    animation: none !important;
+  }
+
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: none !important;
+  }
+
+  .glass-card:hover {
+    transform: none !important;
   }
 }

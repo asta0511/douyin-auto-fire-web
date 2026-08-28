@@ -2,6 +2,21 @@
 
 import { useState } from 'react'
 
+function createRipple(e) {
+  const btn = e.currentTarget
+  const rect = btn.getBoundingClientRect()
+  const size = Math.max(rect.width, rect.height)
+  const x = e.clientX - rect.left - size / 2
+  const y = e.clientY - rect.top - size / 2
+  const ripple = document.createElement('span')
+  ripple.className = 'btn-ripple'
+  ripple.style.width = ripple.style.height = `${size}px`
+  ripple.style.left = `${x}px`
+  ripple.style.top = `${y}px`
+  btn.appendChild(ripple)
+  ripple.addEventListener('animationend', () => ripple.remove())
+}
+
 export default function CookieEditor({ onSuccess, onError }) {
   const [cookie, setCookie] = useState('')
   const [loading, setLoading] = useState(false)
@@ -64,6 +79,7 @@ export default function CookieEditor({ onSuccess, onError }) {
             type="submit"
             disabled={loading || !cookie.trim()}
             className="btn-primary px-6 py-2.5 text-sm"
+            onClick={createRipple}
           >
             {loading ? (
               <span className="flex items-center gap-2">

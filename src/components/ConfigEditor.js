@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 const DEFAULT_CONFIG = {
   task_id: 'daily-streak',
@@ -14,6 +14,9 @@ const DEFAULT_CONFIG = {
   target_open_retries: 1,
   target_open_timeout_seconds: 15,
 }
+
+const HISTORY_KEY = 'douyin_config_history'
+const MAX_HISTORY = 20
 
 function parseConfig(raw) {
   const c = typeof raw === 'string' ? JSON.parse(raw) : raw
@@ -34,6 +37,41 @@ function parseConfig(raw) {
   }
 }
 
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveToHistory(config) {
+  const history = loadHistory()
+  const entry = {
+    id: Date.now(),
+    timestamp: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+    friendCount: config.friends.length,
+    messageCount: config.messages.length,
+    config: { ...config },
+  }
+  history.unshift(entry)
+  if (history.length > MAX_HISTORY) history.pop()
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
+  return entry
+}
+
+function configSummary(config) {
+  const parts = []
+  if (config.friends?.length) parts.push(`${config.friends.length} 个好友`)
+  if (config.messages?.length) {
+    const types = config.messages.map((m) => m.type).join(', ')
+    parts.push(`${config.messages.length} 条消息 (${types})`)
+  }
+  if (config.task_id) parts.push(`任务: ${config.task_id}`)
+  return parts.join(' | ')
+}
+
 export default function ConfigEditor({ onSuccess, onError }) {
   const [config, setConfig] = useState(DEFAULT_CONFIG)
   const [friendInput, setFriendInput] = useState('')
@@ -43,7 +81,14 @@ export default function ConfigEditor({ onSuccess, onError }) {
   const [importMode, setImportMode] = useState(false)
   const [importText, setImportText] = useState('')
   const [dragOver, setDragOver] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState([])
+  const [selectedHistory, setSelectedHistory] = useState(null)
   const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    setHistory(loadHistory())
+  }, [])
 
   function updateField(path, value) {
     setConfig((prev) => {
@@ -70,7 +115,10 @@ export default function ConfigEditor({ onSuccess, onError }) {
     if (!importText.trim()) return
     try {
       const parsed = parseConfig(importText)
+      saveToHistory(config)
       applyImportedConfig(parsed)
+      setHistory(loadHistory())
+      onSuccess?.('配置已导入，当前配置已自动记录到历史')
     } catch {
       onError('JSON 格式错误，请检查')
     }
@@ -85,7 +133,10 @@ export default function ConfigEditor({ onSuccess, onError }) {
     reader.onload = (e) => {
       try {
         const parsed = parseConfig(e.target.result)
+        saveToHistory(config)
         applyImportedConfig(parsed)
+        setHistory(loadHistory())
+        onSuccess?.('配置已导入，当前配置已自动记录到历史')
       } catch {
         onError('JSON 文件格式错误')
       }
@@ -162,6 +213,24 @@ export default function ConfigEditor({ onSuccess, onError }) {
     }
   }
 
+  function restoreFromHistory(entry) {
+    setConfig(entry.config)
+    setStickersText(JSON.stringify(entry.config.stickers, null, 2))
+    setSelectedHistory(null)
+    setShowHistory(false)
+  }
+
+  function deleteHistoryEntry(id) {
+    const updated = history.filter((h) => h.id !== id)
+    setHistory(updated)
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
+  }
+
+  function clearAllHistory() {
+    localStorage.removeItem(HISTORY_KEY)
+    setHistory([])
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
 
@@ -205,7 +274,9 @@ export default function ConfigEditor({ onSuccess, onError }) {
         return
       }
 
-      onSuccess()
+      saveToHistory(config)
+      setHistory(loadHistory())
+      onSuccess('Config 已保存到 GitHub Secrets，并已记录到历史')
     } catch {
       onError('网络错误')
     } finally {
@@ -217,17 +288,128 @@ export default function ConfigEditor({ onSuccess, onError }) {
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-lg font-semibold text-gray-900">更新 DOUYIN_CONFIG</h2>
-        <button
-          type="button"
-          onClick={() => setImportMode(!importMode)}
-          className="text-sm px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
-        >
-          {importMode ? '取消导入' : '导入配置'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => { setShowHistory(!showHistory); setSelectedHistory(null) }}
+            className="text-sm px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition flex items-center gap-1.5"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            历史记录
+            {history.length > 0 && (
+              <span className="bg-gray-200 text-gray-600 text-xs rounded-full px-1.5 py-0.5">{history.length}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setImportMode(!importMode)}
+            className="text-sm px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition"
+          >
+            {importMode ? '取消导入' : '导入配置'}
+          </button>
+        </div>
       </div>
       <p className="text-sm text-gray-500 mb-4">
-        通过表单编辑配置，保存后会自动同步到 GitHub Secrets。
+        通过表单编辑配置，保存后会自动同步到 GitHub Secrets。导入或保存时会自动记录历史版本。
       </p>
+
+      {/* History Panel */}
+      {showHistory && (
+        <div className="mb-6 border border-gray-200 rounded-xl bg-gray-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <h3 className="text-sm font-medium text-gray-700">配置历史记录</h3>
+            <div className="flex items-center gap-2">
+              {history.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllHistory}
+                  className="text-xs text-red-500 hover:text-red-700 transition"
+                >
+                  清空全部
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => { setShowHistory(false); setSelectedHistory(null) }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {history.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-gray-400">
+              暂无历史记录。导入或保存配置后会自动记录。
+            </div>
+          ) : selectedHistory ? (
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-500">
+                  {selectedHistory.timestamp} — {selectedHistory.friendCount} 个好友 · {selectedHistory.messageCount} 条消息
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => restoreFromHistory(selectedHistory)}
+                    className="text-xs px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                  >
+                    恢复此版本
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHistory(null)}
+                    className="text-xs px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    返回列表
+                  </button>
+                </div>
+              </div>
+              <pre className="text-xs font-mono bg-white rounded-lg border p-3 overflow-auto max-h-64 text-gray-700">
+                {JSON.stringify(selectedHistory.config, null, 2)}
+              </pre>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200 max-h-72 overflow-y-auto">
+              {history.map((entry) => (
+                <div key={entry.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition group">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHistory(entry)}
+                    className="flex-1 text-left"
+                  >
+                    <div className="text-sm text-gray-500">{entry.timestamp}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {entry.friendCount} 个好友 · {entry.messageCount} 条消息
+                    </div>
+                  </button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                    <button
+                      type="button"
+                      onClick={() => restoreFromHistory(entry)}
+                      className="text-xs px-2 py-1 text-orange-600 hover:bg-orange-50 rounded transition"
+                      title="恢复此版本"
+                    >
+                      恢复
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteHistoryEntry(entry.id)}
+                      className="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded transition"
+                      title="删除此记录"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Import Section */}
       {importMode && (

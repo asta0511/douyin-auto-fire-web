@@ -34,7 +34,7 @@ export async function getSecretStatus() {
         throw new Error(`Failed to get ${name}: ${err}`)
       }
       const data = await res.json()
-      return { name, exists: true, updated_at: data.created_at }
+      return { name, exists: true, updated_at: data.updated_at }
     })
   )
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import SecretCard from '@/components/SecretCard'
 import CookieEditor from '@/components/CookieEditor'
 import ConfigEditor from '@/components/ConfigEditor'
+import LiquidBackground from '@/components/LiquidBackground'
 
 export default function DashboardPage() {
   const [secrets, setSecrets] = useState([])
@@ -52,12 +53,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen p-4 sm:p-6">
-      {/* Decorative blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-orange-300/25 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-red-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-200/15 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '12s' }} />
-      </div>
+      <LiquidBackground />
 
       {/* Toast */}
       {toast && (

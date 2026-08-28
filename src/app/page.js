@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import LiquidBackground from '@/components/LiquidBackground'
 
 export default function LoginPage() {
   const [password, setPassword] = useState('')
@@ -37,12 +38,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      {/* Decorative blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-orange-300/30 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-300/25 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }} />
-        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-amber-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '12s' }} />
-      </div>
+      <LiquidBackground />
 
       <div className="w-full max-w-md animate-enter" style={{ animationDelay: '0.1s' }}>
         <div className="glass-card glass-lens p-10 mx-4">
